@@ -117,6 +117,7 @@ fn test_binary_search_tree(){
         for k in &keys{
             rootlink2 = Some(BstNode::tree_insert(&rootlink2, k));
         }
+    }
 
         //test the insertion by printing the tree
         generate_dotfile_bst(&rootlink2.as_ref().unwrap(), "bst.dot");
@@ -128,6 +129,14 @@ fn test_binary_search_tree(){
         // } else {
         //     false
         // }
+
+        let root = create_test_tree();
+        let median = median(root.clone());
+
+        println!("Median :{}", median);
+
+        let mut output = vec::new();
+        innorder(root.clone(), &mut output);
 
         //test removal
         let rootalter = BstNode::tree_delete(&rootlink2.as_ref().unwrap());
