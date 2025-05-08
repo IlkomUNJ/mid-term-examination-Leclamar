@@ -130,7 +130,6 @@ fn test_binary_search_tree(){
         //     false
         // }
 
-        let root = create_test_tree();
         let median = median(root.clone());
 
         println!("Median :{}", median);
