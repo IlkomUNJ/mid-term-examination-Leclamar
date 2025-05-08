@@ -24,6 +24,120 @@ impl BstNode {
         }
     }
 
+    pub fn add_node(&self, target_node: &BstNodeLink, value: i32) -> bool {
+        let found = self.tree_search(&target_node.borrow().key.unwrap());
+    
+        if found.is_none() {
+            return false;
+        }
+    
+        let found_node = found.unwrap();
+    
+        let mut found_borrow = found_node.borrow_mut();
+        if value < found_borrow.key.unwrap() {
+            if found_borrow.left.is_none() {
+                found_borrow.add_left_child(&found_node, value);
+                return true;
+            }
+        } else {
+            if found_borrow.right.is_none() {
+                found_borrow.add_right_child(&found_node, value);
+                return true;
+            }
+        }
+    
+        false
+    }
+    
+    pub fn tree_predecessor(node: &BstNodeLink) -> Option<BstNodeLink> {
+        if let Some(left_node) = &node.borrow().left {
+            return Some(left_node.borrow().maximum());
+        }
+    
+        let mut current = node.clone();
+        let mut parent = BstNode::upgrade_weak_to_strong(current.borrow().parent.clone());
+    
+        while let Some(ref p) = parent {
+            if let Some(right) = &p.borrow().right {
+                if BstNode::is_node_match(right, &current) {
+                    return Some(p.clone());
+                }
+            }
+            current = p.clone();
+            parent = BstNode::upgrade_weak_to_strong(current.borrow().parent.clone());
+        }
+    
+        None
+    }
+
+    pub fn median(&self) -> BstNodeLink {
+        let mut nodes: Vec<BstNodeLink> = Vec::new();
+        self.in_order_collect(&mut nodes);
+    
+        let median_index = nodes.len() / 2;
+    
+        nodes[median_index].clone()
+    }
+
+    fn count_nodes(node: &BstNodeLink) -> usize {
+        match node {
+            Some(n) => {
+                let n_ref = n.borrow();
+                1 + BstNode::count_nodes(&n_ref.left) + BstNode::count_nodes(&n_ref.right)
+            }
+            None => 0,
+        }
+    }
+
+    fn in_order_generator<'a>(node: &'a BstNodeLink, queue: &mut Vec<&'a Rc<RefCell<BstNode>>>) {
+        if let Some(ref n) = node {
+            let n_ref = n.borrow();
+            BstNode::in_order_generator(&n_ref.left, queue);
+            queue.push(n);
+            BstNode::in_order_generator(&n_ref.right, queue);
+        }
+    }
+
+    fn build_balanced(queue: &mut Vec<&Rc<RefCell<BstNode>>>, n: usize) -> BstNodeLink {
+        if n == 0 {
+            return None;
+        }
+
+        // Build left subtree
+        let left = BstNode::build_balanced(queue, n / 2);
+
+        // Root node
+        let current = queue.remove(0); // simulate iterator
+        let mut new_node = BstNode {
+            key: current.borrow().key,
+            left,
+            right: None,
+        };
+
+        new_node.right = BstNode::build_balanced(queue, n - 1 - n / 2);
+
+        Some(Rc::new(RefCell::new(new_node)))
+    }
+    
+    fn in_order_collect(&self, nodes: &mut Vec<BstNodeLink>) {
+        if let Some(ref left_node) = self.left {
+            left_node.borrow().in_order_collect(nodes);
+        }
+    
+        nodes.push(self.get_bst_nodelink_copy());
+    
+        if let Some(ref right_node) = self.right {
+            right_node.borrow().in_order_collect(nodes);
+        }
+    }
+
+    pub fn tree_rebalance(node: &BstNodeLink) -> BstNodeLink {
+        let total = BstNode::count_nodes(node);
+        let mut queue = Vec::new();
+        BstNode::in_order_generator(node, &mut queue);
+        BstNode::build_balanced(&mut queue, total)
+    }
+
     pub fn new_bst_nodelink(value: i32) -> BstNodeLink {
         let currentnode = BstNode::new(value);
         let currentlink = Rc::new(RefCell::new(currentnode));
