@@ -121,10 +121,17 @@ fn test_binary_search_tree(){
         //test the insertion by printing the tree
         generate_dotfile_bst(&rootlink2.as_ref().unwrap(), "bst.dot");
 
+        // let target = root.borrow().tree_search(&20);
+
+        // if let some(tn) = tareget{
+        //     let success = root.borrow(&tn, 10)
+        // } else {
+        //     false
+        // }
+
         //test removal
         let rootalter = BstNode::tree_delete(&rootlink2.as_ref().unwrap());
         generate_dotfile_bst(&rootalter, "bst_delete_root.dot");
-    }
 }
 
 fn test_index(){

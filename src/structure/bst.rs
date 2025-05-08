@@ -24,6 +24,73 @@ impl BstNode {
         }
     }
 
+    pub fn add_node(&self, target_node: &BstNodeLink, value: i32) -> bool {
+        let found = self.tree_search(&target_node.borrow().key.unwrap());
+    
+        if found.is_none() {
+            return false;
+        }
+    
+        let found_node = found.unwrap();
+    
+        let mut found_borrow = found_node.borrow_mut();
+        if value < found_borrow.key.unwrap() {
+            if found_borrow.left.is_none() {
+                found_borrow.add_left_child(&found_node, value);
+                return true;
+            }
+        } else {
+            if found_borrow.right.is_none() {
+                found_borrow.add_right_child(&found_node, value);
+                return true;
+            }
+        }
+    
+        false
+    }
+    
+    pub fn tree_predecessor(node: &BstNodeLink) -> Option<BstNodeLink> {
+        if let Some(left_node) = &node.borrow().left {
+            return Some(left_node.borrow().maximum());
+        }
+    
+        let mut current = node.clone();
+        let mut parent = BstNode::upgrade_weak_to_strong(current.borrow().parent.clone());
+    
+        while let Some(ref p) = parent {
+            if let Some(right) = &p.borrow().right {
+                if BstNode::is_node_match(right, &current) {
+                    return Some(p.clone());
+                }
+            }
+            current = p.clone();
+            parent = BstNode::upgrade_weak_to_strong(current.borrow().parent.clone());
+        }
+    
+        None
+    }
+
+    pub fn median(&self) -> BstNodeLink {
+        let mut nodes: Vec<BstNodeLink> = Vec::new();
+        self.in_order_collect(&mut nodes);
+    
+        let median_index = nodes.len() / 2;
+    
+        nodes[median_index].clone()
+    }
+    
+    fn in_order_collect(&self, nodes: &mut Vec<BstNodeLink>) {
+        if let Some(ref left_node) = self.left {
+            left_node.borrow().in_order_collect(nodes);
+        }
+    
+        nodes.push(self.get_bst_nodelink_copy());
+    
+        if let Some(ref right_node) = self.right {
+            right_node.borrow().in_order_collect(nodes);
+        }
+    }
+
     pub fn new_bst_nodelink(value: i32) -> BstNodeLink {
         let currentnode = BstNode::new(value);
         let currentlink = Rc::new(RefCell::new(currentnode));
